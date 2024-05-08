@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+{% endblock %}
+
+{% block body %}
+<div class="content">
+    <h1 style="text-align: center">Search Engine</h1>
+
+    <div class="form-container">
+        <form action="{{ url_for('handle_search') }}" method="POST" style="display: inline;">
+            <input type="text" name="query" id="query" placeholder="Enter your search term">
+            <input type="submit" value="Search">
+        </form>
+    
+        <form action="{{ url_for('reindex') }}" method="POST" style="display: inline;">
+            <button type="submit">Reload Data</button>
+        </form>
+    </div>
+
+    {% if results %}
+    <div class="row">
+        <div class="col-2">
+            {% for agg in aggs %}
+            <h6>{{ agg }}</h6>
+            {% for key, count in aggs[agg].items() %}
+            <form method="POST" style="display: inline;">
+                <input type="hidden" name="query" value="{{ agg|lower }}:{{key}} {{ query }}">
+                <button type="submit"{% if aggs[agg]|length == 1 %} disabled{% endif %}>{{ key }} ({{ count }})</button>
+            </form>
+            {% endfor %}
+            {% endfor %}
+        </div>
+        <div class="col-10">
+            <div class="pagination">
+                Showing results {{ from_ + 1 }}-{{ from_ + results|length }} out of {{ total }}.
+                {% if from_ > 0 %}
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="query" value="{{ query }}">
+                    <input type="hidden" name="from_" value="{{ from_ - size }}">
+                    <button type="submit">← Previous page</button>
+                </form>
+                {% endif %}
+                {% if from_ + results|length < total %}
+                <form method="POST" style="display: inline;">
+                    <input type="hidden" name="query" value="{{ query }}">
+                    <input type="hidden" name="from_" value="{{ from_ + size }}">
+                    <button type="submit">Next page →</button>
+                </form>
+                {% endif %}
+            </div>
+            {% for result in results %}
+            <div>
+                {{ from_ + loop.index }}. <b><a href="{{ url_for('get_document', id=result._id) }}">{{ result._source.name }}</a></b>
+                <p>{{ result._source.summary }}</p>
+                <small>
+                    Category: {{ result._source.category }}.
+                    Last updated: {{ result._source.updated_at | default(result._source.created_on) }}.
+                    {% if result._score %}<i>(Score: {{ result._score }})</i>{% endif %}
+                </small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% elif request.method == 'POST' %}
+    <p>No results found.</p>
+    {% endif %}
+</div>
+{% endblock %}
