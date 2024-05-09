@@ -1,6 +1,7 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, render_template, request, Response
 from search import Search
 import re
+import json
 
 
 app = Flask(__name__)
@@ -9,12 +10,15 @@ es = Search()
 @app.get('/search/<size>/<from_>') #for java client take date
 def java_search_all(size, from_):
     results, aggs = search(query='', size=size, from_=from_)
-    return jsonify(results['hits']['hits'])
+    json_file = json.dumps(results['hits']['hits'], indent=4)
+    return Response(json_file, status=200, mimetype='application/json')
+
 
 @app.get('/search=<query>/<size>/<from_>') #for java client take date
 def java_search(query, size, from_):
-    results, aggs = search(query=query, size=size, from_=from_)
-    return jsonify(results['hits']['hits'])
+    results, aggs = search(query='', size=size, from_=from_)
+    json_file = json.dumps(results['hits']['hits'], indent=4)
+    return Response(json_file, status=200, mimetype='application/json')
 
 ## if data type change, only need to modify extract_filters handle_search and get_document
 
