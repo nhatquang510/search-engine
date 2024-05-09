@@ -6,6 +6,8 @@ import json
 
 class Search:
 
+    data_source = "https://raw.githubusercontent.com/nhatquang510/datasets/main/news_aggregator_dataset.json"
+
     def __init__(self) -> None:
         #connect to the service
         self.es = Elasticsearch('https://4ldowmp64k:au0mi38fmu@beech-758078219.us-east-1.bonsaisearch.net')
@@ -30,7 +32,7 @@ class Search:
     
     def reindex(self, index_name):
         self.create_index(index_name)
-        r = requests.get('https://raw.githubusercontent.com/nhatquang510/datasets/main/data.json')
+        r = requests.get(self.data_source)
         documents = r.json()
         ## with open('data.json', 'rt') as f:
         ##     documents = json.loads(f.read())

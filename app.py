@@ -5,7 +5,7 @@ import re
 app = Flask(__name__)
 es = Search()
 
-## if data type change, only need to modify handle_search and get_document
+## if data type change, only need to modify extract_filters handle_search and get_document
 
 @app.route('/')
 def index():
@@ -23,7 +23,7 @@ def handle_search():
             'must': {
                 'multi_match': {
                     'query': parsed_query,
-                    'fields': ['name', 'summary', 'content'],
+                    'fields': ['title', 'summary', 'detailed_content'],
                 }
             }
         }
@@ -48,16 +48,16 @@ def handle_search():
             {
                 'category-agg': {
                     'terms': {
-                        'field': 'category.keyword',
+                        'field': 'tags.keyword',
                     }
                 },
-                'year-agg': {
-                    'date_histogram': {
-                        'field': 'updated_at',
-                        'calendar_interval': 'year',
-                        'format': 'yyyy',
-                    },
-                },
+                # 'year-agg': {
+                #     'date_histogram': {
+                #         'field': 'updated_at',
+                #         'calendar_interval': 'year',
+                #         'format': 'yyyy',
+                #     },
+                # },
             }
         },
         size=size,
@@ -68,11 +68,11 @@ def handle_search():
             bucket['key']: bucket['doc_count']
             for bucket in results['aggregations']['category-agg']['buckets']
         },
-        'Year': {
-            bucket['key_as_string']: bucket['doc_count']
-            for bucket in results['aggregations']['year-agg']['buckets']
-            if bucket['doc_count'] > 0
-        },
+        # 'Year': {
+        #     bucket['key_as_string']: bucket['doc_count']
+        #     for bucket in results['aggregations']['year-agg']['buckets']
+        #     if bucket['doc_count'] > 0
+        # },
     }
     return render_template('index.html', results=results['hits']['hits'],
                            query=query, size = size, from_=from_,
@@ -88,9 +88,10 @@ def reindex():
 @app.get("/document/<id>")
 def get_document(id):
     document = es.retrieve_document("my_documents", id)
-    title = document["_source"]["name"]
-    paragraphs = document["_source"]["content"].split("\n")
-    return render_template("document.html", title=title, paragraphs=paragraphs)
+    title = document["_source"]["title"]
+    paragraphs = document["_source"]["detailed_content"].split("\n")
+    url = document["_source"]["article_link"]
+    return render_template("document.html", title=title, paragraphs=paragraphs, url=url)
 
 def extract_filters(query):
     filters = []
@@ -100,25 +101,25 @@ def extract_filters(query):
     if m:
         filters.append(
             {
-                "term": {"category.keyword": {"value": m.group(1)}},
+                "term": {"tags.keyword": {"value": m.group(1)}},
             }
         )
         query = re.sub(filter_regex, "", query).strip()
 
-    filter_regex = r"year:([^\s]+)\s*"
-    m = re.search(filter_regex, query)
-    if m:
-        filters.append(
-            {
-                "range": {
-                    "updated_at": {
-                        "gte": f"{m.group(1)}||/y",
-                        "lte": f"{m.group(1)}||/y",
-                    }
-                },
-            }
-        )
-        query = re.sub(filter_regex, "", query).strip()
+    # filter_regex = r"year:([^\s]+)\s*"
+    # m = re.search(filter_regex, query)
+    # if m:
+    #     filters.append(
+    #         {
+    #             "range": {
+    #                 "updated_at": {
+    #                     "gte": f"{m.group(1)}||/y",
+    #                     "lte": f"{m.group(1)}||/y",
+    #                 }
+    #             },
+    #         }
+    #     )
+    #     query = re.sub(filter_regex, "", query).strip()
 
     return {"filter": filters}, query
 

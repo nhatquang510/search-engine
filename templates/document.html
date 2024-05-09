@@ -8,6 +8,7 @@
 <div class="content">
     <h2>{{ title }}</h2>
     {% for paragraph in paragraphs %}
+        <p>{{ url }}</p>
         <p>{{ paragraph }}</p>
     {% endfor %}
     <button onclick="history.back()">Go Back</button>

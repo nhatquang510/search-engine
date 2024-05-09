@@ -8,6 +8,8 @@
 <div class="content">
     <h1 style="text-align: center">Search Engine</h1>
 
+    <a href="/">Start Page</a>
+
     <div class="form-container">
         <form action="{{ url_for('handle_search') }}" method="POST" style="display: inline;">
             <input type="text" name="query" id="query" placeholder="Enter your search term">
@@ -52,11 +54,12 @@
             </div>
             {% for result in results %}
             <div>
-                {{ from_ + loop.index }}. <b><a href="{{ url_for('get_document', id=result._id) }}">{{ result._source.name }}</a></b>
+                {{ from_ + loop.index }}. <b><a href="{{ url_for('get_document', id=result._id) }}">{{ result._source.title }}</a></b>
                 <p>{{ result._source.summary }}</p>
                 <small>
                     Category: {{ result._source.category }}.
-                    Last updated: {{ result._source.updated_at | default(result._source.created_on) }}.
+                    Source: {{ result._source.website_source }}.
+                    Author: {{ result._source.author }}.
                     {% if result._score %}<i>(Score: {{ result._score }})</i>{% endif %}
                 </small>
             </div>
