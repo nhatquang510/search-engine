@@ -15,10 +15,8 @@
             <input type="text" name="query" id="query" placeholder="Enter your search term">
             <input type="submit" value="Search">
         </form>
-    
-        <form action="{{ url_for('reindex') }}" method="POST" style="display: inline;">
-            <button type="submit">Reload Data</button>
-        </form>
+        
+        <a href="/reindex"><button>Redirect to /reindex</button></a>
     </div>
 
     {% if results %}
