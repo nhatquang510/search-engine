@@ -24,7 +24,7 @@ def java_search(query, size, from_):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', data_source = es.data_source)
 
 @app.route('/', methods=['POST'])
 def handle_search():
@@ -34,7 +34,7 @@ def handle_search():
     
     results, aggs = search(query=query, size=size, from_=from_)
 
-    return render_template('index.html', results=results['hits']['hits'],
+    return render_template('index.html', datasource = es.data_source, results=results['hits']['hits'],
                            query=query, size = size, from_=from_,
                            total=results['hits']['total']['value'], aggs = aggs)
     
