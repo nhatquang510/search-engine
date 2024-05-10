@@ -16,7 +16,7 @@ def java_search_all(size, from_):
 
 @app.get('/search=<query>/<size>/<from_>') #for java client take date
 def java_search(query, size, from_):
-    results, aggs = search(query='', size=size, from_=from_)
+    results, aggs = search(query=query, size=size, from_=from_)
     json_file = json.dumps(results['hits']['hits'], indent=4)
     return Response(json_file, status=200, mimetype='application/json')
 
