@@ -20,7 +20,7 @@ def java_search(query, size, from_):
     json_file = json.dumps(results['hits']['hits'], indent=4)
     return Response(json_file, status=200, mimetype='application/json')
 
-## if data type change, only need to modify extract_filters handle_search and get_document
+## if data type change, only need to modify extract_filters, search and get_document
 
 @app.route('/')
 def index():
@@ -61,7 +61,7 @@ def extract_filters(query):
     if m:
         filters.append(
             {
-                "term": {"tags.keyword": {"value": m.group(1)}},
+                "term": {"category.keyword": {"value": m.group(1)}},
             }
         )
         query = re.sub(filter_regex, "", query).strip()
@@ -117,7 +117,7 @@ def search(query, size, from_):
             {
                 'category-agg': {
                     'terms': {
-                        'field': 'tags.keyword',
+                        'field': 'category.keyword',
                     }
                 },
                 # 'year-agg': {
