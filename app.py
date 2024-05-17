@@ -12,6 +12,8 @@ es = Search()
 def java_search_all(size, from_):
     search_results, aggs = search(query='', size=size, from_=from_)
     results = []
+    total=search_results['hits']['total']['value']
+    results.append(total)
     for document in search_results['hits']['hits']:
         article = document['_source']
         d = {}
@@ -28,6 +30,8 @@ def java_search(encoded_query, size, from_):
     query = unquote(encoded_query)
     search_results, aggs = search(query=query, size=size, from_=from_)
     results = []
+    total=search_results['hits']['total']['value']
+    results.append(total)
     for document in search_results['hits']['hits']:
         article = document['_source']
         d = {}
