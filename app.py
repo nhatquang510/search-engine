@@ -26,8 +26,16 @@ def java_search_all(size, from_):
 @app.get('/search=<encoded_query>/<size>/<from_>') #for java client take date
 def java_search(encoded_query, size, from_):
     query = unquote(encoded_query)
-    results, aggs = search(query=query, size=size, from_=from_)
-    json_file = json.dumps(results['hits']['hits'], indent=4)
+    search_results, aggs = search(query=query, size=size, from_=from_)
+    results = []
+    for document in search_results['hits']['hits']:
+        article = document['_source']
+        d = {}
+        d['id'] = document['_id']
+        d['titles'] = article['title']
+        results.append(d)
+        
+    json_file = json.dumps(results, indent=4)
     return Response(json_file, status=200, mimetype='application/json')
 
 ## if data type change, only need to modify extract_filters, search and get_document
