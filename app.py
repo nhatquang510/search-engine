@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, Response
 from search import Search
 import re
 import json
+from urllib.parse import unquote
 
 
 app = Flask(__name__)
@@ -14,8 +15,9 @@ def java_search_all(size, from_):
     return Response(json_file, status=200, mimetype='application/json')
 
 
-@app.get('/search=<query>/<size>/<from_>') #for java client take date
-def java_search(query, size, from_):
+@app.get('/search=<encoded_query>/<size>/<from_>') #for java client take date
+def java_search(encoded_query, size, from_):
+    query = unquote(encoded_query)
     results, aggs = search(query=query, size=size, from_=from_)
     json_file = json.dumps(results['hits']['hits'], indent=4)
     return Response(json_file, status=200, mimetype='application/json')
@@ -56,15 +58,19 @@ def get_document(id):
 def extract_filters(query):
     filters = []
 
-    filter_regex = r"category:([^\s]+)\s*"
-    m = re.search(filter_regex, query)
-    if m:
-        filters.append(
-            {
-                "term": {"category.keyword": {"value": m.group(1)}},
-            }
-        )
-        query = re.sub(filter_regex, "", query).strip()
+    # category filter
+    while(True):
+        filter_regex = r"category:([^\s]+)\s*"
+        m = re.search(filter_regex, query)
+        if m:
+            filters.append(
+                {
+                    "term": {"category.keyword": {"value": m.group(1)}},
+                }
+            )
+            query = re.sub(filter_regex, "", query, 1).strip()
+        else:
+            break
 
     # filter_regex = r"year:([^\s]+)\s*"
     # m = re.search(filter_regex, query)
