@@ -6,7 +6,7 @@ import json
 
 class Search:
 
-    data_source = "https://raw.githubusercontent.com/nhatquang510/datasets/main/news_aggregator_dataset.json"
+    data_source = "https://raw.githubusercontent.com/sfatew/News-Aggregator/main/data/final_articles.json"
 
     def __init__(self) -> None:
         #connect to the service

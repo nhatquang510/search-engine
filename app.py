@@ -8,7 +8,19 @@ from urllib.parse import unquote
 app = Flask(__name__)
 es = Search()
 
-@app.get('/search/<size>/<from_>') #for java client take date
+@app.get('/TagsList') #for java client take date
+def TagsList(size = 800, from_ = 0):
+    search_results, aggs = search(query='', size=size, from_=from_)
+    results = []
+    for agg in aggs:
+        for key, count in aggs[agg].items():
+            results.append(key)
+
+    json_file = json.dumps(results, indent=4)
+    return Response(json_file, status=200, mimetype='application/json')
+
+
+@app.get('/search/<size>/<from_>') #for java client take data
 def java_search_all(size, from_):
     search_results, aggs = search(query='', size=size, from_=from_)
     results = []
@@ -17,15 +29,16 @@ def java_search_all(size, from_):
     for document in search_results['hits']['hits']:
         article = document['_source']
         d = {}
-        d['id'] = document['_id']
+        d['id'] = article['id']
         d['titles'] = article['title']
+        d['score'] = document['_score']
         results.append(d)
         
     json_file = json.dumps(results, indent=4)
     return Response(json_file, status=200, mimetype='application/json')
 
 
-@app.get('/search=<encoded_query>/<size>/<from_>') #for java client take date
+@app.get('/search=<encoded_query>/<size>/<from_>') #for java client take data
 def java_search(encoded_query, size, from_):
     query = unquote(encoded_query)
     search_results, aggs = search(query=query, size=size, from_=from_)
@@ -35,8 +48,9 @@ def java_search(encoded_query, size, from_):
     for document in search_results['hits']['hits']:
         article = document['_source']
         d = {}
-        d['id'] = document['_id']
+        d['id'] = article['id']
         d['titles'] = article['title']
+        d['score'] = document['_score']
         results.append(d)
         
     json_file = json.dumps(results, indent=4)
@@ -78,14 +92,14 @@ def get_document(id):
 def extract_filters(query):
     filters = []
 
-    # category filter
+    # tags filter
     while(True):
-        filter_regex = r"category:([^\s]+)\s*"
+        filter_regex = r"tags:([^\s]+)\s*"
         m = re.search(filter_regex, query)
         if m:
             filters.append(
                 {
-                    "term": {"category.keyword": {"value": m.group(1)}},
+                    "term": {"tags.keyword": {"value": m.group(1)}},
                 }
             )
             query = re.sub(filter_regex, "", query, 1).strip()
@@ -141,9 +155,9 @@ def search(query, size, from_):
             },
             "aggs":
             {
-                'category-agg': {
+                'tags-agg': {
                     'terms': {
-                        'field': 'category.keyword',
+                        'field': 'tags.keyword',
                     }
                 },
                 # 'year-agg': {
@@ -159,9 +173,9 @@ def search(query, size, from_):
         from_=from_
     )
     aggs = {
-        'Category': {
+        'Tags': {
             bucket['key']: bucket['doc_count']
-            for bucket in results['aggregations']['category-agg']['buckets']
+            for bucket in results['aggregations']['tags-agg']['buckets']
         },
         # 'Year': {
         #     bucket['key_as_string']: bucket['doc_count']
