@@ -37,6 +37,10 @@ class Search:
         ## with open('data.json', 'rt') as f:
         ##     documents = json.loads(f.read())
         return self.insert_documents(index_name=index_name, documents=documents)
+    
+    def reindex_with_given_file(self, index_name, documents): #documents is jsonified
+        self.create_index(index_name)
+        return self.insert_documents(index_name=index_name, documents=documents)
 
     def search(self, index_name, body, size, from_):
         return self.es.search(index=index_name, body=body, size=size, from_=from_)

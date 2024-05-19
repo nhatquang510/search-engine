@@ -1,12 +1,30 @@
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, Response, jsonify
 from search import Search
 import re
 import json
-from urllib.parse import unquote
+from urllib.parse import unquote, quote
 
 
 app = Flask(__name__)
 es = Search()
+
+
+@app.route('/reload-data-from-local/<encoded_path>', methods=['GET'])
+def add_json(encoded_path):
+    """Load data from local machine"""
+    json_file_path = unquote(encoded_path)
+    
+    try:
+        with open(json_file_path, 'rt', encoding="utf8") as f:
+            documents = json.loads(f.read())
+            response = es.reindex_with_given_file("my_documents", documents)
+            reindex_status = 'Index with '+ str(len(response["items"])) + ' documents created in ' + str(response["took"]) + ' milliseconds.'
+            return render_template('dataloading.html', reindex_status = reindex_status)
+            #return jsonify({'Successfully': 'File is uploaded'})
+    except FileNotFoundError:
+        return jsonify({'error': 'File not found'})
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 @app.get('/TagsList') #for java client take date
 def TagsList(size = 800, from_ = 0):
