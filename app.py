@@ -13,8 +13,10 @@ def TagsList(size = 800, from_ = 0):
     search_results, aggs = search(query='', size=size, from_=from_)
     results = []
     for agg in aggs:
+        result = [agg]
         for key, count in aggs[agg].items():
-            results.append(key)
+            result.append({key: count})
+        results.append(result)
 
     json_file = json.dumps(results, indent=4)
     return Response(json_file, status=200, mimetype='application/json')
@@ -106,20 +108,19 @@ def extract_filters(query):
         else:
             break
 
-    # filter_regex = r"year:([^\s]+)\s*"
-    # m = re.search(filter_regex, query)
-    # if m:
-    #     filters.append(
-    #         {
-    #             "range": {
-    #                 "updated_at": {
-    #                     "gte": f"{m.group(1)}||/y",
-    #                     "lte": f"{m.group(1)}||/y",
-    #                 }
-    #             },
-    #         }
-    #     )
-    #     query = re.sub(filter_regex, "", query).strip()
+    # website_source filter
+    while(True):
+        filter_regex = r"website_source:([^\s]+)\s*"
+        m = re.search(filter_regex, query)
+        if m:
+            filters.append(
+                {
+                    "term": {"website_source.keyword": {"value": m.group(1)}},
+                }
+            )
+            query = re.sub(filter_regex, "", query, 1).strip()
+        else:
+            break
 
     return {"filter": filters}, query
 
@@ -160,13 +161,11 @@ def search(query, size, from_):
                         'field': 'tags.keyword',
                     }
                 },
-                # 'year-agg': {
-                #     'date_histogram': {
-                #         'field': 'updated_at',
-                #         'calendar_interval': 'year',
-                #         'format': 'yyyy',
-                #     },
-                # },
+                'website_source-agg': {
+                    'terms': {
+                        'field': 'website_source.keyword',
+                    }
+                },
             }
         },
         size=size,
@@ -177,11 +176,10 @@ def search(query, size, from_):
             bucket['key']: bucket['doc_count']
             for bucket in results['aggregations']['tags-agg']['buckets']
         },
-        # 'Year': {
-        #     bucket['key_as_string']: bucket['doc_count']
-        #     for bucket in results['aggregations']['year-agg']['buckets']
-        #     if bucket['doc_count'] > 0
-        # },
+        'Website source': {
+            bucket['key']: bucket['doc_count']
+            for bucket in results['aggregations']['website_source-agg']['buckets']
+        },
     }
     return results, aggs
 
